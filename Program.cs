@@ -266,6 +266,13 @@ namespace MethodExporter
 
     internal class Program
     {
+        private static MetadataReference? RefFrom(Type t)
+        {
+            var loc = t.Assembly.Location;
+            return string.IsNullOrWhiteSpace(loc) ? null : MetadataReference.CreateFromFile(loc);
+        }
+
+
         private static void Main(string[] args)
         {
             Console.Write("Analiz edilecek klasör veya .cs dosyası yolu: ");
@@ -298,13 +305,13 @@ namespace MethodExporter
 
             var trees = files.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f))).ToList();
 
-            var refs = new List<MetadataReference>
+            var refs = new[]
             {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(XLWorkbook).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(CSharpSyntaxTree).Assembly.Location)
-            };
+                    RefFrom(typeof(object)),
+                    RefFrom(typeof(Enumerable)),
+                    RefFrom(typeof(XLWorkbook)),
+                    RefFrom(typeof(CSharpSyntaxTree))
+            }.Where(r => r != null).ToList();
 
             var compilation = CSharpCompilation.Create(
                 "TmpCompilation",
