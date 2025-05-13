@@ -1,0 +1,23 @@
+name: build-exe
+on:
+  push:
+    tags: [ 'v*' ]          # v1.0 gibi tag atınca çalışır
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-dotnet@v4
+      with: { dotnet-version: '8.0.x' }
+
+    # exe’yi tek dosya üret
+    - run: dotnet publish MethodExporter.csproj -c Release -r win-x64 \
+           --self-contained true /p:PublishSingleFile=true -o publish
+
+    # Release sayfasına yükle
+    - uses: softprops/action-gh-release@v2
+      with:
+        files: publish/*.exe
