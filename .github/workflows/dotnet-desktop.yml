@@ -3,21 +3,32 @@ on:
   push:
     tags: [ 'v*' ]          # v1.0 gibi tag atınca çalışır
 
+permissions:
+  contents: write           # Release için gerekli izin
+
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
+    # Kodun checkout edilmesi
     - uses: actions/checkout@v4
 
+    # .NET ortamının kurulması
     - uses: actions/setup-dotnet@v4
-      with: { dotnet-version: '8.0.x' }
+      with:
+        dotnet-version: '8.0.x'
 
-    # exe’yi tek dosya üret
-    - run: dotnet publish MethodExporter.csproj -c Release -r win-x64 \
-           --self-contained true /p:PublishSingleFile=true -o publish
+    # exe’yi tek dosya olarak üret
+    - name: Build and Publish
+      run: |
+        dotnet publish MethodExporter.csproj -c Release -r win-x64 \
+        --self-contained true /p:PublishSingleFile=true -o publish
 
-    # Release sayfasına yükle
-    - uses: softprops/action-gh-release@v2
+    # Release sayfasına yükleme
+    - name: Upload to GitHub Releases
+      uses: softprops/action-gh-release@v2
       with:
         files: publish/*.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
